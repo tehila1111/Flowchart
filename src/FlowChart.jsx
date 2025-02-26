@@ -295,16 +295,22 @@ const FlowChart = () => {
     const getPathDisplay = () => {
         const path = [];
     
-        // לולאה על כל השאלות שנענו
         Object.keys(answers).forEach((questionKey) => {
             const answer = answers[questionKey];
             if (answer !== null) {
                 const question = questions[questionKey];
-    
+            
                 // בודק איזה סטטוס לשים (כן/לא)
-                const answerText = answer === true ? 'כן' : answer === false ? 'לא' : 'לא נבחר';
+                var answerText = answer === true ? 'כן' : answer === false ? 'לא' : 'לא נבחר';
                 const status = answer === true ? 'positive' : answer === false ? 'negative' : 'neutral';
-    
+            
+                // אם השאלה היא על סוג הבניין, אז נבצע את החיפוש על הערכים של buildingTypes
+                if (questionKey === 'buildingType' && answers.buildingType !== null) {
+                    answerText = buildingTypes.find(
+                        (type) => type.value === answers.buildingType
+                    ).label;                   
+                }
+        
                 path.push({
                     question: question.text,
                     answer: answerText,
@@ -312,7 +318,7 @@ const FlowChart = () => {
                 });
             }
         });
-    
+        
         return path;
     };
     
