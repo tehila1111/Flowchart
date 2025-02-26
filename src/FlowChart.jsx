@@ -16,6 +16,7 @@ const FlowChart = () => {
         // משרדים 
         isLargerThan100sqmOfficeAndCommercial: null,
         withinHeightLimitOfficeAndCommercial: null,
+        isFireHazardStorage: null
     });
 
     const [currentQuestion, setCurrentQuestion] = useState('newBuilding');
@@ -43,7 +44,7 @@ const FlowChart = () => {
                 'public': "isHospitalOrHostel",
                 'office': "isLargerThan100sqmOfficeAndCommercial",
                 'commercial': "isLargerThan100sqmOfficeAndCommercial",
-                'storage': "isLargerThan100sqmStorage"
+                'storage': "isFireHazardStorage"
             },
             type: "select"
         },
@@ -110,6 +111,12 @@ const FlowChart = () => {
             nextIfYes: "result",
             nextIfNo: "end",
             type: "yesNo"
+        },
+        isFireHazardStorage: { // השאלה החדשה לגבי אחסנת מטען אש
+            text: "האם המחסן מיועד לאחסנת מטען אש או לחומרים מסוכנים?",
+            nextIfYes: "end", // אם כן, המסקנה היא כי המבנה אינו נדרש למכון בקרה
+            nextIfNo: "isLargerThan100sqmStorage", // אם לא, נגיע למסקנה הרגילה
+            type: "yesNo"
         }
 
     };
@@ -164,7 +171,8 @@ const FlowChart = () => {
             isLargerThan100sqmOfficeAndCommercial: null,
             withinHeightLimitOfficeAndCommercial: null,
             isLargerThan100sqmStorage: null,
-            withinHeightLimitStorage: null
+            withinHeightLimitStorage: null,
+            isFireHazardStorage: null
         });
         setCurrentQuestion('newBuilding');
         setShowResult(false);
@@ -207,7 +215,8 @@ const FlowChart = () => {
             answers.newBuilding === true &&
             answers.buildingType === 'storage' &&
             answers.isLargerThan100sqmStorage === true &&
-            answers.withinHeightLimitStorage === true
+            answers.withinHeightLimitStorage === true &&
+            answers.isFireHazardStorage === false // רק אם לא אחסנה לחומרים מסוכנים
         ) {
             return true;
         }
@@ -285,32 +294,28 @@ const FlowChart = () => {
 
     const getPathDisplay = () => {
         const path = [];
-
-        // Add first question
-        if (answers.newBuilding !== null) {
-            path.push({
-                question: questions.newBuilding.text,
-                answer: answers.newBuilding ? 'כן' : 'לא',
-                status: answers.newBuilding ? 'positive' : 'negative'
-            });
-        }
-
-        // Add building type
-        if (answers.buildingType !== null) {
-            const buildingType = buildingTypes.find(
-                (type) => type.value === answers.buildingType
-            );
-            path.push({
-                question: questions.buildingType.text,
-                answer: buildingType?.label || 'לא נבחר',
-                status: 'neutral'
-            });
-        }
-
-        // Add other answers as needed here
-
+    
+        // לולאה על כל השאלות שנענו
+        Object.keys(answers).forEach((questionKey) => {
+            const answer = answers[questionKey];
+            if (answer !== null) {
+                const question = questions[questionKey];
+    
+                // בודק איזה סטטוס לשים (כן/לא)
+                const answerText = answer === true ? 'כן' : answer === false ? 'לא' : 'לא נבחר';
+                const status = answer === true ? 'positive' : answer === false ? 'negative' : 'neutral';
+    
+                path.push({
+                    question: question.text,
+                    answer: answerText,
+                    status: status
+                });
+            }
+        });
+    
         return path;
     };
+    
 
     return (
         <div className="container py-4">
